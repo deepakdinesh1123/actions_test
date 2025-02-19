@@ -1,0 +1,14 @@
+name: Deploy App
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+      - staging
+
+jobs:
+  test:
+    uses: deepakdinesh1123/actions/.github/workflows/app_release.yml@test_deepak
+    secrets: inherit

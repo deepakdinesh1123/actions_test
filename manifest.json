@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "app_versions": [
+    {
+        "config_script": "",
+        "tasks": "",
+        "fixture": "",
+        "remark": "testing deployment from actions",
+        "version": "2.60.5"
+    },
+    {
+        "config_script": "",
+        "tasks": "",
+        "fixture": "",
+        "remark": "testing reading urls based on branch",
+        "version": "2.60.6"
+    },
+    {
+        "config_script": "",
+        "tasks": "",
+        "fixture": "",
+        "remark": "testing local release",
+        "version": "2.60.7"
+    },
+    {
+        "config_script": "",
+        "tasks": "",
+        "fixture": "",
+        "remark": "testing local release",
+        "version": "2.60.8"
+    },
+    {
+        "config_script": "",
+        "tasks": "",
+        "fixture": "",
+        "remark": "testing release final",
+        "version": "2.70.3"
+    }
+  ],
+  "urls": {
+    "prod": "https://prod_deployment.com/customization/deployment",
+    "staging": "https://staging_deployment.com"
+  }
+}
