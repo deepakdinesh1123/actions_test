@@ -10,5 +10,5 @@ on:
 
 jobs:
   test:
-    uses: deepakdinesh1123/actions/.github/workflows/app_release.yml@test_deepak
+    uses: deepakdinesh1123/actions/.github/workflows/release.yml@test_deepak
     secrets: inherit
