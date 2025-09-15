@@ -1,43 +1,53 @@
-name: Deploy App
+name: Check File Changes on PR Merge
 
 on:
   pull_request:
-    types:
-      - closed
+    types: [closed]
     branches:
-      - main
+      - main  # Change this to your target branch
 
 jobs:
-  build-and-push:
+  check-file-changes:
+    # Only run if the PR was merged (not just closed)
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
+          # Fetch enough history to compare with the base branch
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Check if should run deployment
-        id: check-deployment
+      - name: Check for changes to specific file
+        id: check-changes
         run: |
-          # Check if PR body contains sync workflow text
-          if echo "${{ github.event.pull_request.body }}" | grep -q "This PR was automatically created by the Sync Application workflow"; then
-            echo "should_deploy=true"
-            echo "reason=sync_workflow"
-            exit 0
-          fi
+          # Define the file you want to monitor
+          TARGET_FILE="Dockerfile"
 
-          # Check if PR contains changes to Dockerfile or requirements.txt
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          CHANGED_FILES=$(git diff --name-only origin/${{github.event.pull_request.base.ref }}...HEAD)
+          # Get the base branch (usually main)
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
 
-          if echo "$CHANGED_FILES" | grep -E "(^|/)Dockerfile$|requirements\.txt$"; then
-            echo "should_deploy=true"
-            echo "reason=file_changes"
-            echo "Changed files requiring deployment: $CHANGED_FILES"
+          # Get the merge commit SHA
+          MERGE_SHA="${{ github.event.pull_request.merge_commit_sha }}"
+
+          # Check if the target file was changed in this PR
+          if git diff --name-only "origin/$BASE_BRANCH" "$MERGE_SHA" | grep -q "^$TARGET_FILE$"; then
+            echo "File $TARGET_FILE was changed in this PR"
+            echo "file_changed=true" >> $GITHUB_OUTPUT
+            echo "changed_file=$TARGET_FILE" >> $GITHUB_OUTPUT
           else
-            echo "should_deploy=false"
-            echo "No deployment-triggering files changed"
+            echo "File $TARGET_FILE was not changed in this PR"
+            echo "file_changed=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Take action if file was changed
+        if: steps.check-changes.outputs.file_changed == 'true'
+        run: |
+          echo "🚨 Important file was modified: ${{ steps.check-changes.outputs.changed_file }}"
+          echo "Taking appropriate action..."
+
+      - name: No action needed
+        if: steps.check-changes.outputs.file_changed == 'false'
+        run: |
+          echo "✅ No changes to monitored file - no action needed"
