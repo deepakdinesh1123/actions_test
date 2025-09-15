@@ -6,9 +6,35 @@ on:
       - closed
     branches:
       - main
-      - staging
 
 jobs:
-  test:
-    uses: deepakdinesh1123/actions/.github/workflows/release.yml@test_deepak
-    secrets: inherit
+  build-and-push:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Check if should run deployment
+        id: check-deployment
+        run: |
+          # Check if PR body contains sync workflow text
+          if echo "${{ github.event.pull_request.body }}" | grep -q "This PR was automatically created by the Sync Application workflow"; then
+            echo "should_deploy=true"
+            echo "reason=sync_workflow"
+            exit 0
+          fi
+
+          # Check if PR contains changes to Dockerfile or requirements.txt
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only HEAD~${{ github.event.pull_request.commits }} HEAD)
+
+          if echo "$CHANGED_FILES" | grep -E "(^|/)Dockerfile$|requirements\.txt$"; then
+            echo "should_deploy=true"
+            echo "reason=file_changes"
+            echo "Changed files requiring deployment: $CHANGED_FILES"
+          else
+            echo "should_deploy=false"
+            echo "No deployment-triggering files changed"
+          fi
