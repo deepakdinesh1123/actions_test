@@ -1,53 +1,35 @@
-name: Build, Push Docker Image & Deploy
+name: Open Pull Request
 
 on:
   pull_request:
     types: [closed]
-    branches:
-      - main
 
 jobs:
-  build-and-push:
+  open-pull-request:
+    permissions:
+      pull-requests: write
+
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if deployment should run
-        id: should-deploy
-        run: |
-          # Check if PR body contains the sync workflow text
-          PR_BODY="${{ github.event.pull_request.body }}"
-          if [[ "$PR_BODY" == *"This PR was automatically created by the Sync Application workflow"* ]]; then
-            echo "✅ PR was created by Sync Application workflow"
-            SYNC_WORKFLOW=true
-          else
-            echo "❌ PR was not created by Sync Application workflow"
-            SYNC_WORKFLOW=false
-          fi
-
-          # Check if Dockerfile or requirements.txt were changed
-          CHANGED_FILES=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
-          if echo "$CHANGED_FILES" | grep -E "(Dockerfile|requirements\.txt)$"; then
-            echo "✅ Found changes to Dockerfile or requirements.txt"
-            FILE_CHANGES=true
-          else
-            echo "❌ No changes to Dockerfile or requirements.txt"
-            FILE_CHANGES=false
-          fi
-
-          # Proceed if either condition is met
-          if [[ "$SYNC_WORKFLOW" == "true" || "$FILE_CHANGES" == "true" ]]; then
-            echo "✅ Conditions met - proceeding with deployment"
-            echo "should_deploy=true"
-          else
-            echo "❌ No conditions met - skipping deployment"
-            echo "should_deploy=false"
-            exit 0
-          fi
+      - name: Create pull request to main
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the merged branch name
+          MERGED_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+          # Create PR from merged branch to main
+          gh pr create \
+            --title "Merge $MERGED_BRANCH to main" \
+            --body "Auto-generated PR to merge $MERGED_BRANCH into main branch" \
+            --head "$MERGED_BRANCH" \
+            --base "main" \
+            --assignee "${{ github.actor }}" || echo "PR already exists or failed to create"
