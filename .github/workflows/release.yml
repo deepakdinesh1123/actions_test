@@ -1,53 +1,53 @@
-name: Check File Changes on PR Merge
+name: Build, Push Docker Image & Deploy
 
 on:
   pull_request:
     types: [closed]
     branches:
-      - main  # Change this to your target branch
+      - main
 
 jobs:
-  check-file-changes:
-    # Only run if the PR was merged (not just closed)
+  build-and-push:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
         with:
-          # Fetch enough history to compare with the base branch
           fetch-depth: 0
 
-      - name: Check for changes to specific file
-        id: check-changes
+      - name: Check if deployment should run
+        id: should-deploy
         run: |
-          # Define the file you want to monitor
-          TARGET_FILE="Dockerfile"
-
-          # Get the base branch (usually main)
-          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-
-          # Get the merge commit SHA
-          MERGE_SHA="${{ github.event.pull_request.merge_commit_sha }}"
-
-          # Check if the target file was changed in this PR
-          if git diff --name-only "origin/$BASE_BRANCH" "$MERGE_SHA" | grep -q "^$TARGET_FILE$"; then
-            echo "File $TARGET_FILE was changed in this PR"
-            echo "file_changed=true" >> $GITHUB_OUTPUT
-            echo "changed_file=$TARGET_FILE" >> $GITHUB_OUTPUT
+          # Check if PR body contains the sync workflow text
+          PR_BODY="${{ github.event.pull_request.body }}"
+          if [[ "$PR_BODY" == *"This PR was automatically created by the Sync Application workflow"* ]]; then
+            echo "✅ PR was created by Sync Application workflow"
+            SYNC_WORKFLOW=true
           else
-            echo "File $TARGET_FILE was not changed in this PR"
-            echo "file_changed=false" >> $GITHUB_OUTPUT
+            echo "❌ PR was not created by Sync Application workflow"
+            SYNC_WORKFLOW=false
           fi
 
-      - name: Take action if file was changed
-        if: steps.check-changes.outputs.file_changed == 'true'
-        run: |
-          echo "🚨 Important file was modified: ${{ steps.check-changes.outputs.changed_file }}"
-          echo "Taking appropriate action..."
+          # Check if Dockerfile or requirements.txt were changed
+          CHANGED_FILES=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
+          if echo "$CHANGED_FILES" | grep -E "(Dockerfile|requirements\.txt)$"; then
+            echo "✅ Found changes to Dockerfile or requirements.txt"
+            FILE_CHANGES=true
+          else
+            echo "❌ No changes to Dockerfile or requirements.txt"
+            FILE_CHANGES=false
+          fi
 
-      - name: No action needed
-        if: steps.check-changes.outputs.file_changed == 'false'
-        run: |
-          echo "✅ No changes to monitored file - no action needed"
+          # Proceed if either condition is met
+          if [[ "$SYNC_WORKFLOW" == "true" || "$FILE_CHANGES" == "true" ]]; then
+            echo "✅ Conditions met - proceeding with deployment"
+            echo "should_deploy=true"
+          else
+            echo "❌ No conditions met - skipping deployment"
+            echo "should_deploy=false"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
