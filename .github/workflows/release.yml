@@ -6,6 +6,9 @@ on:
 
 jobs:
   open-pull-request:
+    permissions:
+      pull-requests: write
+
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
