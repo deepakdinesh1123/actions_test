@@ -16,7 +16,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          fetch-depth: ${{ github.event.pull_request.commits }}
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Check if should run deployment
         id: check-deployment
@@ -30,7 +31,7 @@ jobs:
 
           # Check if PR contains changes to Dockerfile or requirements.txt
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          CHANGED_FILES=$(git diff --name-only HEAD~${{ github.event.pull_request.commits }} HEAD)
+          CHANGED_FILES=$(git diff --name-only origin/${{github.event.pull_request.base.ref }}...HEAD)
 
           if echo "$CHANGED_FILES" | grep -E "(^|/)Dockerfile$|requirements\.txt$"; then
             echo "should_deploy=true"
