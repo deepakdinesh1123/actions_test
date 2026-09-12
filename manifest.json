@@ -3,7 +3,7 @@
   "app_versions": [
     {
         "config_script": "",
-        "tasks": "",
+        "tasks": "something",
         "fixture": "",
         "remark": "testing deployment from actions",
         "version": "2.60.5"
