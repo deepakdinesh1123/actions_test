@@ -9,7 +9,7 @@
         "version": "2.60.5"
     },
     {
-        "config_script": "co",
+        "config_scrip": "co",
         "tasks": "",
         "fixture": "",
         "remark": "testing reading urls based on branch",
