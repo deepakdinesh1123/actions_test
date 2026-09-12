@@ -2,7 +2,7 @@
   "version": "2.9",
   "app_versions": [
     {
-        "config_script": "",
+        "config_script": "why",
         "task": "nothing",
         "fixture": "",
         "remark": "testing deployment from actions",
