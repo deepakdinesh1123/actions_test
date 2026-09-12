@@ -5,7 +5,7 @@
         "config_script": "",
         "task": "something",
         "fixture": "",
-        "remark": "testing deployment from actions",
+        "remar": "testing deployment from actions",
         "version": "2.60.5"
     },
     {
