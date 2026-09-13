@@ -1,15 +1,15 @@
 {
-  "version": "2.9",
+  "version": "1.4",
   "app_versions": [
     {
         "config_script": "why",
         "task": "nothing",
         "fixture": "",
-        "remark": "testing deployment from actions",
+        "remar": "testing deployment from actions",
         "version": "2.60.5"
     },
     {
-        "config_script": "",
+        "config_scrip": "co",
         "tasks": "",
         "fixture": "",
         "remark": "testing reading urls based on branch",
