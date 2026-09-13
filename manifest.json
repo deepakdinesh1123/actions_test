@@ -3,7 +3,7 @@
   "app_versions": [
     {
         "config_script": "",
-        "task": "smething",
+        "task": "smaug",
         "fixture": "",
         "remar": "testing deployment from actions",
         "version": "2.60.5"
