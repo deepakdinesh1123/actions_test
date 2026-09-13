@@ -2,8 +2,8 @@
   "version": "1.4",
   "app_versions": [
     {
-        "config_script": "",
-        "task": "smaug",
+        "config_script": "why",
+        "task": "nothing",
         "fixture": "",
         "remar": "testing deployment from actions",
         "version": "2.60.5"
